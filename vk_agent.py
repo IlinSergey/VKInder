@@ -40,7 +40,7 @@ class VkAgent:
         return id
 
 
-    def get_photo(self, count: int):
+    def get_photo(self):
         url = 'https://api.vk.com/method/photos.get'
         id = self.find_users()
         print(id)
@@ -55,6 +55,8 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
+        print(response)
+        count = len(response['response']['items'])
         try:
             for i in range(count):
                 file_name = response['response']['items'][i]['likes']['count']
@@ -70,4 +72,4 @@ class VkAgent:
 
 
 vk = VkAgent(config.vk_user_token)
-vk.get_photo(3)
+vk.get_photo()
