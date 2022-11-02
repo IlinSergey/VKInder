@@ -25,25 +25,27 @@ class VkAgent:
             'access_token': self.token,
             'v': '5.131',
             'sort': 0,
-            'count': 1000,
-            'status': 6,
+            'count': 20,
+            'status': 4,
             'sex': 1,
-            'age_from': 20,
+            'age_from': 30,
             'is_closed': False,
             'has_photo': 1,
-            'fields': ['city']
+            'hometown': 'Чита'
         }
         response = self.get_response(url, params)
         stop = len(response['response']['items'])
         item = randrange(0, stop)
         id =response['response']['items'][item]['id']
-        return id
+        if not response['response']['items'][item]['is_closed']:
+            return id
+        else:
+            self.find_users()
 
 
     def get_photo(self):
         url = 'https://api.vk.com/method/photos.get'
         id = self.find_users()
-        print(id)
         params = {
             'owner_id': id,
             'album_id': 'profile',
@@ -55,19 +57,31 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
-        print(response)
-        count = len(response['response']['items'])
-        try:
-            for i in range(count):
-                file_name = response['response']['items'][i]['likes']['count']
+        count_photo = len(response['response']['items'])
+        if count_photo >= 3:
+            count_for_name_photo = 1
+            photo_dict = {}
+            for i in range(count_photo):
                 link = self.get_link(response, i)
-                f = open(f'backup\{file_name}.jpg', 'wb')
+                count_for_name_photo += 1
+                likes_count = response['response']['items'][i]['likes']['count']
+                comments_count = response['response']['items'][i]['comments']['count']
+                photo_dict[likes_count + comments_count] = link
+            sorted_dict = sorted(photo_dict.items(), reverse=True)
+            list_of_link = []
+
+            for k in range(3):
+                list_of_link.append(sorted_dict[k][1])
+            count_for_name_photo = 1
+
+            for link in list_of_link:
+                f = open(f'backup\{id}_{count_for_name_photo}.jpg', 'wb')
                 ufr = requests.get(link)
                 f.write(ufr.content)
                 f.close()
-            print('Фото скачаны')
-        except Exception:
-            print('Упс, что то пошло не так!')
+                count_for_name_photo += 1
+        else:
+            self.get_photo()
 
 
 
