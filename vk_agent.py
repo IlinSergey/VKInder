@@ -6,6 +6,7 @@ import pprint
 from random import randrange
 
 
+
 class VkAgent:
     def __init__(self, token: str):
         self.token = token
@@ -25,18 +26,19 @@ class VkAgent:
             'access_token': self.token,
             'v': '5.131',
             'sort': 0,
-            'count': 20,
-            'status': 4,
+            'count': 100,
+            'status': 6,
             'sex': 1,
-            'age_from': 30,
+            'age_from': 20,
             'is_closed': False,
             'has_photo': 1,
-            'hometown': 'Чита'
+            'hometown': 'Выборг'
         }
         response = self.get_response(url, params)
         stop = len(response['response']['items'])
         item = randrange(0, stop)
-        id =response['response']['items'][item]['id']
+        id = response['response']['items'][item]['id']
+
         if not response['response']['items'][item]['is_closed']:
             return id
         else:
