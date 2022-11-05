@@ -4,7 +4,10 @@ import json
 import os
 import pprint
 from random import randrange
+from data_base import create_table, User
 
+import sqlalchemy as sq
+from sqlalchemy.orm import sessionmaker
 
 
 class VkAgent:
@@ -21,6 +24,11 @@ class VkAgent:
 
 
     def find_users(self):
+
+        engine = sq.create_engine(config.db)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
         url = 'https://api.vk.com/method/users.search'
         params = {
             'access_token': self.token,
@@ -29,7 +37,7 @@ class VkAgent:
             'count': 100,
             'status': 6,
             'sex': 1,
-            'age_from': 20,
+            'age_from': 25,
             'is_closed': False,
             'has_photo': 1,
             'hometown': 'Выборг'
@@ -40,12 +48,21 @@ class VkAgent:
         id = response['response']['items'][item]['id']
 
         if not response['response']['items'][item]['is_closed']:
-            return id
+            try:
+                user = User(user_id=id)
+                session.add(user)
+                session.commit()
+                return id
+            except:
+                pass
+
         else:
             self.find_users()
+        session.close()
 
 
     def get_photo(self):
+
         url = 'https://api.vk.com/method/photos.get'
         id = self.find_users()
         params = {
@@ -84,6 +101,9 @@ class VkAgent:
                 count_for_name_photo += 1
         else:
             self.get_photo()
+
+
+
 
 
 

@@ -1,27 +1,19 @@
-import sqlalchemy
-from sqlalchemy import *
+import sqlalchemy as sq
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 import config
 
 
+Base = declarative_base()
 
-meta = MetaData()
+class User(Base):
+    __tablename__ = 'user'
 
-users = Table('Users', meta,
-              Column('id', Integer, primary_key=True),
-              Column('user_id', Integer, nullable=False, unique=True)
-               )
+    id = sq.Column(sq.Integer, primary_key=True)
+    user_id = sq.Column(sq.Integer, unique=True)
+    is_favorite = sq.Column(sq.BOOLEAN)
 
+    def __str__(self):
+        return f'Id пользователя: {self.user_id}'
 
-engine = sqlalchemy.create_engine(config.db)
-meta.create_all(engine)
-
-connection = engine.connect()
-
-try:
-    connection.execute(users.insert().values(user_id='16'))
-except:
-    print('Такой пользователь уже был')
-result = connection.execute(select(users))
-
-
-connection.close()
+def create_table(engine):
+   Base.metadata.create_all(engine)
