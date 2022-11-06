@@ -10,7 +10,7 @@ vk = vk_api.VkApi(token=token)
 longpoll = VkLongPoll(vk)
 
 vk_photo = VkAgent(config.vk_user_token)
-uploader = vk_api.VkUpload(vk)
+
 
 
 def write_msg(user_id, message):

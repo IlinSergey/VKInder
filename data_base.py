@@ -17,3 +17,15 @@ class User(Base):
 
 def create_table(engine):
    Base.metadata.create_all(engine)
+
+
+def record_user(id):
+    engine = sq.create_engine(config.db)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    user = User(user_id=id)
+    session.add(user)
+    session.commit()
+    session.close()
+
+record_user(10)
