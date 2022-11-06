@@ -9,7 +9,7 @@ from data_base import create_table, User
 import sqlalchemy as sq
 from sqlalchemy.orm import sessionmaker
 
-
+user_list = []
 class VkAgent:
     def __init__(self, token: str):
         self.token = token
@@ -25,46 +25,50 @@ class VkAgent:
 
     def find_users(self):
 
-        engine = sq.create_engine(config.db)
-        Session = sessionmaker(bind=engine)
-        session = Session()
+        # engine = sq.create_engine(config.db)
+        # Session = sessionmaker(bind=engine)
+        # session = Session()
 
         url = 'https://api.vk.com/method/users.search'
         params = {
             'access_token': self.token,
             'v': '5.131',
-            'sort': 0,
-            'count': 100,
+            'sort': 1,
+            'count': 1000,
             'status': 6,
             'sex': 1,
-            'age_from': 25,
+            'age_from': 20,
             'is_closed': False,
             'has_photo': 1,
             'hometown': 'Выборг'
         }
+
         response = self.get_response(url, params)
         stop = len(response['response']['items'])
         item = randrange(0, stop)
         id = response['response']['items'][item]['id']
-
-        if not response['response']['items'][item]['is_closed']:
-            try:
-                user = User(user_id=id)
-                session.add(user)
-                session.commit()
+        is_closed = response['response']['items'][item]['is_closed']
+        if id not in user_list:
+            if is_closed == False:
+                #user = User(user_id=id)
+                # session.add(user)
+                # session.commit()
+                # session.close()
+                user_list.append(id)
                 return id
-            except:
-                pass
-
+            else:
+                self.find_users()
         else:
             self.find_users()
-        session.close()
 
 
     def get_photo(self):
 
         url = 'https://api.vk.com/method/photos.get'
         id = self.find_users()
+        if id is None:
+            self.find_users()
+
         params = {
             'owner_id': id,
             'album_id': 'profile',
@@ -91,14 +95,16 @@ class VkAgent:
 
             for k in range(3):
                 list_of_link.append(sorted_dict[k][1])
+
             count_for_name_photo = 1
 
             for link in list_of_link:
-                f = open(f'backup\{id}_{count_for_name_photo}.jpg', 'wb')
+                f = open(f'backup\{count_for_name_photo}.jpg', 'wb')
                 ufr = requests.get(link)
                 f.write(ufr.content)
                 f.close()
                 count_for_name_photo += 1
+            return id
         else:
             self.get_photo()
 
@@ -107,5 +113,6 @@ class VkAgent:
 
 
 
+
 vk = VkAgent(config.vk_user_token)
-vk.get_photo()
+print(vk.get_photo())
