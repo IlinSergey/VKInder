@@ -4,6 +4,7 @@ import json
 import os
 import pprint
 from random import randrange
+import time
 
 
 class VkAgent:
@@ -38,21 +39,25 @@ class VkAgent:
             'age_from': 25,
             'is_closed': False,
             'has_photo': 1,
-            'hometown': 'Выборг'
+            'hometown': 'Los Angeles'
         }
 
         response = self.get_response(url, params)
-        pprint.pprint(response)
-        stop = len(response['response']['items'])
-        item = randrange(0, stop)
-        id = response['response']['items'][item]['id']
-        is_closed = response['response']['items'][item]['is_closed']
+        time.sleep(0.3)
 
-        if is_closed == False:
-            if id is not None:
-                return id
-        else:
-            self.find_users()
+        def select_id(response):
+            stop = len(response['response']['items'])
+            item = randrange(0, stop)
+            id = response['response']['items'][item]['id']
+            is_closed = response['response']['items'][item]['is_closed']
+
+            if is_closed == False:
+                if id is not None:
+                    return id
+            else:
+                select_id(response)
+        id = select_id(response)
+        return id
 
 
     def get_photo(self):
@@ -76,6 +81,7 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
+        time.sleep(0.3)
         count_photo = len(response['response']['items'])
         if count_photo >= 3:
             count_for_name_photo = 1
@@ -109,3 +115,4 @@ class VkAgent:
 
 vk = VkAgent(config.vk_user_token)
 print(vk.find_users())
+vk.get_photo()
