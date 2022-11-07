@@ -20,12 +20,15 @@ def create_table(engine):
 
 
 def record_user(id):
-    engine = sq.create_engine(config.db)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    user = User(user_id=id)
-    session.add(user)
-    session.commit()
-    session.close()
-
-record_user(10)
+    try:
+        engine = sq.create_engine(config.db)
+        create_table(engine)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        user = User(user_id=id)
+        session.add(user)
+        session.commit()
+        session.close()
+        return True
+    except Exception:
+        return False

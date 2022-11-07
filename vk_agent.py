@@ -5,6 +5,7 @@ import os
 import pprint
 from random import randrange
 import time
+import data_base
 
 
 class VkAgent:
@@ -39,7 +40,7 @@ class VkAgent:
             'age_from': 25,
             'is_closed': False,
             'has_photo': 1,
-            'hometown': 'Los Angeles'
+            'hometown': 'Санкт-Петербург'
         }
 
         response = self.get_response(url, params)
@@ -57,7 +58,10 @@ class VkAgent:
             else:
                 select_id(response)
         id = select_id(response)
-        return id
+        if data_base.record_user(id):
+            return id
+        else:
+            select_id(response)
 
 
     def get_photo(self):
