@@ -43,36 +43,25 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
+        list_users = []
 
-        def select_id_v2(response):
-            list_users = []
-            for item in response['response']['items']:
+        for item in response['response']['items']:
+            if not item['is_closed']:
                 list_users.append(item['id'])
-            return random.choice(list_users)
-
-
-        def select_id(response):
-            response_select_id = response
-            stop = len(response_select_id['response']['items'])
-            item = randrange(1, stop)
-            id_us = response_select_id['response']['items'][item]['id']
-            is_closed = response_select_id['response']['items'][item]['is_closed']
-
-            if not is_closed:
-                return id_us
             else:
-                select_id(response)
+                continue
 
-        user_id = select_id_v2(response)
-        print(user_id)
-        if user_id is None:
-            select_id(response)
-        else:
+        def select_id_v2(list_users):
+            user_id = random.choice(list_users)
             if data_base.record_user(user_id):
-                print(user_id)
                 return user_id
             else:
-                select_id(response)
+                return select_id_v2(list_users)
+
+
+        return select_id_v2(list_users)
+
+
 
     def get_photo(self):
 
