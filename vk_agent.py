@@ -1,3 +1,5 @@
+import random
+
 import requests
 import config
 import json
@@ -42,6 +44,12 @@ class VkAgent:
 
         response = self.get_response(url, params)
 
+        def select_id_v2(response):
+            list_users = []
+            for item in response['response']['items']:
+                list_users.append(item['id'])
+            return random.choice(list_users)
+
 
         def select_id(response):
             response_select_id = response
@@ -55,7 +63,8 @@ class VkAgent:
             else:
                 select_id(response)
 
-        user_id = select_id(response)
+        user_id = select_id_v2(response)
+        print(user_id)
         if user_id is None:
             select_id(response)
         else:
@@ -123,5 +132,5 @@ class VkAgent:
 
 
 
-#vk = VkAgent(config.vk_user_token)
-#vk.get_photo()
+vk = VkAgent(config.vk_user_token)
+vk.get_photo()

@@ -33,13 +33,13 @@ for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW:
 
         if event.to_me:
-            request = event.text
+            request = event.text.lower()
 
             if request == "привет":
                 write_msg(event.user_id, f"Хай, {event.user_id}")
             elif request == "пока":
                 write_msg(event.user_id, "Пока((")
-            elif request == 'Поехали':
+            elif request == 'поехали':
                 write_msg(event.user_id, f'Ля какая vk.com/id{vk_user.get_photo()}')
                 write_msg_with_photo(event.user_id)
 
