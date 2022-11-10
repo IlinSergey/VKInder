@@ -71,8 +71,6 @@ class VkAgent:
         url = 'https://api.vk.com/method/photos.get'
 
         user_id = self.find_users()
-        if user_id is None:
-            self.find_users()
 
         params = {
             'owner_id': user_id,
@@ -91,11 +89,9 @@ class VkAgent:
          от VK в не более 3х запросов в секунду"""
         count_photo = len(response['response']['items'])
         if count_photo >= 3:
-            count_for_name_photo = 1
             photo_dict = {}
             for i in range(count_photo):
                 link = self.get_link(response, i)
-                count_for_name_photo += 1
                 likes_count = response['response']['items'][i]['likes']['count']
                 comments_count = response['response']['items'][i]['comments']['count']
                 photo_dict[likes_count + comments_count] = link
@@ -121,5 +117,6 @@ class VkAgent:
 
 
 
-vk = VkAgent(config.vk_user_token)
-vk.get_photo()
+# vk = VkAgent(config.vk_user_token)
+# for i in range(5):
+#     vk.get_photo()
