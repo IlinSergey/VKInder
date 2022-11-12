@@ -23,7 +23,10 @@ class VkAgent:
 
         return response['response']['items'][i]['sizes'][-1]['url']
 
-    def find_users(self, sex=1, status=6, age_from=20, hometown='Санкт-Петербург'):
+    def find_users(self, search_params):
+        search_params = search_params
+        if len(search_params) < 4:
+            search_params = [1, 1, 25, 'Санкт-Петербург']
 
         """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает
         рандомный id пользователя"""
@@ -34,12 +37,12 @@ class VkAgent:
             'v': '5.131',
             'sort': 0,
             'count': 1000,
-            'status': status,
-            'sex': sex,
-            'age_from': age_from,
+            'status': search_params[1],
+            'sex': search_params[0],
+            'age_from': search_params[2],
             'is_closed': False,
             'has_photo': 1,
-            'hometown': hometown
+            'hometown': search_params[3]
         }
 
         response = self.get_response(url, params)
@@ -63,14 +66,14 @@ class VkAgent:
 
 
 
-    def get_photo(self):
+    def get_photo(self, search_params):
 
         """Функция запрашиваает id пользователя, и если он удовлетворяет условиям,
          скачивает три самых популярных (на основании лайков и комментариев) фото профиля """
 
         url = 'https://api.vk.com/method/photos.get'
 
-        user_id = self.find_users()
+        user_id = self.find_users(search_params)
 
         params = {
             'owner_id': user_id,
@@ -113,12 +116,12 @@ class VkAgent:
                 count_for_name_photo += 1
             return user_id
         else:
-            return self.get_photo()
+            return self.get_photo(search_params)
 
 
 
 
 
-vk = VkAgent(config.vk_user_token)
-
-vk.get_photo()
+# vk = VkAgent(config.vk_user_token)
+#
+# vk.get_photo()
