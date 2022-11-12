@@ -23,7 +23,7 @@ class VkAgent:
 
         return response['response']['items'][i]['sizes'][-1]['url']
 
-    def find_users(self):
+    def find_users(self, sex=1, status=6, age_from=20, hometown='Санкт-Петербург'):
 
         """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает
         рандомный id пользователя"""
@@ -34,12 +34,12 @@ class VkAgent:
             'v': '5.131',
             'sort': 0,
             'count': 1000,
-            'status': 6,
-            'sex': 1,
-            'age_from': 25,
+            'status': status,
+            'sex': sex,
+            'age_from': age_from,
             'is_closed': False,
             'has_photo': 1,
-            'hometown': 'Москва'
+            'hometown': hometown
         }
 
         response = self.get_response(url, params)
@@ -84,9 +84,11 @@ class VkAgent:
 
         response = self.get_response(url, params)
         time.sleep(0.3)
+
         """так-как не у всех профилей есть 3 фото и они не проходят проверку, отправляется повторный запрос,
         возможны ситуации, когда бедет много запросов подряд, исмользую sleep дабы не попасть под ограничение
          от VK в не более 3х запросов в секунду"""
+
         count_photo = len(response['response']['items'])
         if count_photo >= 3:
             photo_dict = {}
@@ -111,12 +113,12 @@ class VkAgent:
                 count_for_name_photo += 1
             return user_id
         else:
-            self.get_photo()
+            return self.get_photo()
 
 
 
 
 
-# vk = VkAgent(config.vk_user_token)
-# for i in range(5):
-#     vk.get_photo()
+vk = VkAgent(config.vk_user_token)
+
+vk.get_photo()
