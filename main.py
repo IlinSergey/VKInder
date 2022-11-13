@@ -1,14 +1,13 @@
-import pprint
+from vk_agent import VkAgent
+import config
 import os
 from random import randrange
-import config
+
 import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 
-
-from vk_agent import VkAgent
 
 token = config.vk_group_token
 user_token = config.vk_user_token
@@ -43,13 +42,25 @@ for event in longpoll.listen():
         if event.to_me:
             request = event.text.lower()
 
-            if request == "привет":
-                write_msg(event.user_id, f"Привет, {event.user_id}")
-            elif request == "пока":
-                write_msg(event.user_id, "Пока((")
-            elif request == 'поехали':
-                write_msg(event.user_id, f'Ля vk.com/id{vk_user.get_photo(search_params_all_user[event.user_id])}')
-                write_msg_with_photo(event.user_id)
+            if request == 'начать' or request == 'привет':
+                write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
+                keyboard = VkKeyboard(inline=True)
+                keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
+                write_msg(event.user_id, 'Для начала, нужно установить параметры для поиска, позже можно их изменить, отправив команду "Параметры" ', keyboard)
+
+            elif request == 'искать' or request == 'дальше':
+                try:
+                    id_user = vk_user.get_photo(search_params_all_user[event.user_id])
+                    write_msg_with_photo(event.user_id)
+                    keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, f'{vk_user.get_name(id_user)}  - vk.com/id{id_user}', keyboard)
+
+                except:
+                    keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, 'Ой-ёй, кажется не установлены параметры для поиска. Нужно это исправить!', keyboard)
+
             elif request == 'параметры':
                 keyboard = VkKeyboard(inline=True)
                 keyboard.add_button('Женщину', color=VkKeyboardColor.NEGATIVE)
@@ -63,32 +74,28 @@ for event in longpoll.listen():
                             request = event.text.lower()
                             if request == 'женщину':
                                 search_params.append(1)
-                                keyboard = VkKeyboard(inline=True)
-                                keyboard.add_button('Не замужем', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('В поиске', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('Замужем', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('Все сложно', color=VkKeyboardColor.SECONDARY)
-                                write_msg(event.user_id, 'В каком статусе?', keyboard)
                             else:
                                 search_params.append(2)
-                                keyboard = VkKeyboard(inline=True)
-                                keyboard.add_button('Не женат', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('В поиске', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('Женат', color=VkKeyboardColor.SECONDARY)
-                                keyboard.add_button('Все сложно', color=VkKeyboardColor.SECONDARY)
-                                write_msg(event.user_id, 'В каком статусе?', keyboard)
+
+                            keyboard = VkKeyboard(inline=True)
+                            keyboard.add_button('1', color=VkKeyboardColor.SECONDARY)
+                            keyboard.add_button('2', color=VkKeyboardColor.SECONDARY)
+                            keyboard.add_button('3', color=VkKeyboardColor.SECONDARY)
+                            keyboard.add_button('4', color=VkKeyboardColor.SECONDARY)
+                            write_msg(event.user_id, 'В каком статусе?')
+                            write_msg(event.user_id, 'Не женат (замужем) - 1\n В активном поиске - 2\n  Женат (Замужем) - 3\n Все сложно - 4', keyboard)
 
                             for event in longpoll.listen():
                                 if event.type == VkEventType.MESSAGE_NEW:
                                     if event.to_me:
                                         request = event.text.lower()
-                                        if request == 'не женат' or request == 'не замужем':
+                                        if request == '1':
                                             search_params.append(1)
-                                        elif request == 'в поиске':
+                                        elif request == '2':
                                             search_params.append(6)
-                                        elif request == 'женат' or request == 'замужем':
+                                        elif request == '3':
                                             search_params.append(4)
-                                        elif request == 'все сложно':
+                                        elif request == '4':
                                             search_params.append(5)
                                         write_msg(event.user_id, 'С какого возраста ищем?')
 
@@ -104,11 +111,20 @@ for event in longpoll.listen():
                                                             if event.to_me:
                                                                 request = event.text
                                                                 search_params.append(request)
-                                                                write_msg(event.user_id, 'Готово, параметры сохранены!')
                                                                 search_params_all_user[event.user_id] = search_params
+                                                                write_msg(event.user_id, 'Готово, параметры сохранены!')
+                                                                keyboard = VkKeyboard(inline=True)
+                                                                keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
+                                                                write_msg(event.user_id, 'Теперь можно искать пару!', keyboard)
                                                                 break
                                                     break
                                         break
                             break
+
+
+            elif request == 'пока':
+                write_msg(event.user_id, 'Пока((')
+            elif request == 'помощь' or request == 'help' or request == 'хелп':
+                write_msg(event.user_id,'"Параметры" - установить параметры поиска. \n "Искать" - искать пару.')
             else:
-                write_msg(event.user_id, "Не понял вашего ответа...")
+                write_msg(event.user_id, 'Не понял вашего ответа...')

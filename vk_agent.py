@@ -1,5 +1,4 @@
 import random
-
 import requests
 import config
 import json
@@ -24,12 +23,13 @@ class VkAgent:
         return response['response']['items'][i]['sizes'][-1]['url']
 
     def find_users(self, search_params):
-        search_params = search_params
-        if len(search_params) < 4:
-            search_params = [1, 1, 25, 'Санкт-Петербург']
 
         """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает
-        рандомный id пользователя"""
+               рандомный id пользователя"""
+
+        search_params = search_params
+        if len(search_params) < 4:   # На случай, если не придут параметры, будут использованы параметры по умолчанию
+            search_params = [1, 1, 25, 'Санкт-Петербург']
 
         url = 'https://api.vk.com/method/users.search'
         params = {
@@ -119,9 +119,13 @@ class VkAgent:
             return self.get_photo(search_params)
 
 
+    def get_name(self, user_id):
 
-
-
-# vk = VkAgent(config.vk_user_token)
-#
-# vk.get_photo()
+        url = 'https://api.vk.com/method/users.get'
+        params = {
+            'access_token': self.token,
+            'v': '5.131',
+            'user_ids': user_id
+        }
+        response = self.get_response(url, params)
+        return response['response'][0]['first_name']

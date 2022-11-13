@@ -11,6 +11,7 @@ class User(Base):
     id = sq.Column(sq.Integer, primary_key=True)
     user_id = sq.Column(sq.Integer, unique=True)
     is_favorite = sq.Column(sq.BOOLEAN)
+    ban = sq.Column(sq.BOOLEAN)
 
     def __str__(self):
         return f'Id пользователя: {self.user_id}'
@@ -32,3 +33,16 @@ def record_user(id):
         return True
     except Exception:
         return False
+
+
+# def set_favorite():
+#     pass
+    # engine = sq.create_engine(config.db)
+    # create_table(engine)
+    # Session = sessionmaker(bind=engine)
+    # session = Session()
+    # user = User(user_id=id)
+    # session.add(user)
+    # session.commit()
+    # session.close()
+
