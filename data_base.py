@@ -23,7 +23,6 @@ def create_table(engine):
 def record_user(id):
     try:
         engine = sq.create_engine(config.db)
-        create_table(engine)
         Session = sessionmaker(bind=engine)
         session = Session()
         user = User(user_id=id)
@@ -35,14 +34,22 @@ def record_user(id):
         return False
 
 
-# def set_favorite():
-#     pass
-    # engine = sq.create_engine(config.db)
-    # create_table(engine)
-    # Session = sessionmaker(bind=engine)
-    # session = Session()
-    # user = User(user_id=id)
-    # session.add(user)
-    # session.commit()
-    # session.close()
+def show_favorite():
+    engine = sq.create_engine(config.db)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    for user in session.query(User).filter(User.is_favorite == True).all():
+        print(user)
+    session.commit()
+    session.close()
+
+
+def set_favorite(id_user):
+    engine = sq.create_engine(config.db)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session.query(User).filter(User.user_id == id_user).update({'is_favorite': True})
+    session.commit()
+    session.close()
+
 

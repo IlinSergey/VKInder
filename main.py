@@ -2,6 +2,7 @@ from vk_agent import VkAgent
 import config
 import os
 from random import randrange
+from data_base import set_favorite
 
 import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
