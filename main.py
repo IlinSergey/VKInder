@@ -65,7 +65,7 @@ for event in longpoll.listen():
                     write_msg(event.user_id, 'Ой-ёй, кажется не установлены параметры для поиска. Нужно это исправить!', keyboard)
 
             elif request == 'в избранное':
-                set_favorite(current_found_id)
+                set_favorite(current_found_id, event.user_id)
                 keyboard = VkKeyboard(inline=True)
                 keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
                 write_msg(event.user_id, 'Пользователь добавлен в список "Избранные"', keyboard)
@@ -130,7 +130,7 @@ for event in longpoll.listen():
                                         break
                             break
             elif request == 'избранное':
-                user_list = show_favorite()
+                user_list = show_favorite(event.user_id)
                 if len(user_list) < 1:
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
