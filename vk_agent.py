@@ -13,8 +13,10 @@ class VkAgent:
     def __init__(self, token: str):
         self.token = token
 
+
     def get_response(self, url, params):
         return requests.get(url, params=params).json()
+
 
     def get_link(self, response, i):
 
@@ -63,7 +65,6 @@ class VkAgent:
 
 
         return select_id_v2(list_users)
-
 
 
     def get_photo(self, search_params):
@@ -120,6 +121,7 @@ class VkAgent:
 
 
     def get_name(self, user_id):
+        '''Возвращает имя пользователя VK на основании его ID'''
 
         url = 'https://api.vk.com/method/users.get'
         params = {

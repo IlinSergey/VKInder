@@ -2,7 +2,7 @@ from vk_agent import VkAgent
 import config
 import os
 from random import randrange
-from data_base import set_favorite
+from data_base import set_favorite, show_favorite
 
 import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -37,7 +37,7 @@ def write_msg_with_photo(user_id):
 
 
 search_params_all_user = {}
-
+current_found_id = None
 for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW:
         if event.to_me:
@@ -52,8 +52,10 @@ for event in longpoll.listen():
             elif request == 'искать' or request == 'дальше':
                 try:
                     id_user = vk_user.get_photo(search_params_all_user[event.user_id])
+                    current_found_id = id_user
                     write_msg_with_photo(event.user_id)
                     keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('В избранное', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, f'{vk_user.get_name(id_user)}  - vk.com/id{id_user}', keyboard)
 
@@ -61,6 +63,12 @@ for event in longpoll.listen():
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, 'Ой-ёй, кажется не установлены параметры для поиска. Нужно это исправить!', keyboard)
+
+            elif request == 'в избранное':
+                set_favorite(current_found_id)
+                keyboard = VkKeyboard(inline=True)
+                keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
+                write_msg(event.user_id, 'Пользователь добавлен в список "Избранные"', keyboard)
 
             elif request == 'параметры':
                 keyboard = VkKeyboard(inline=True)
@@ -84,7 +92,7 @@ for event in longpoll.listen():
                             keyboard.add_button('3', color=VkKeyboardColor.SECONDARY)
                             keyboard.add_button('4', color=VkKeyboardColor.SECONDARY)
                             write_msg(event.user_id, 'В каком статусе?')
-                            write_msg(event.user_id, 'Не женат (замужем) - 1\n В активном поиске - 2\n  Женат (Замужем) - 3\n Все сложно - 4', keyboard)
+                            write_msg(event.user_id, 'Не женат (замужем) - 1\nВ активном поиске - 2\nЖенат (Замужем) - 3\nВсе сложно - 4', keyboard)
 
                             for event in longpoll.listen():
                                 if event.type == VkEventType.MESSAGE_NEW:
@@ -121,11 +129,18 @@ for event in longpoll.listen():
                                                     break
                                         break
                             break
-
-
+            elif request == 'избранное':
+                user_list = show_favorite()
+                if len(user_list) < 1:
+                    keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, 'Список "Избранное" пуст!\nДавай поскорее найдем кого-нибудь', keyboard)
+                else:
+                    for user in user_list:
+                        write_msg(event.user_id,f'{vk_user.get_name(user)}  - vk.com/id{user}')
             elif request == 'пока':
                 write_msg(event.user_id, 'Пока((')
             elif request == 'помощь' or request == 'help' or request == 'хелп':
-                write_msg(event.user_id,'"Параметры" - установить параметры поиска. \n "Искать" - искать пару.')
+                write_msg(event.user_id, 'Комманды для бота:\n"Параметры" - установить параметры поиска.\n"Искать" - искать пару.\n"Избранное" - показать список избранных пользователей')
             else:
                 write_msg(event.user_id, 'Не понял вашего ответа...')

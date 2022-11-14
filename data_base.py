@@ -21,6 +21,7 @@ def create_table(engine):
 
 
 def record_user(id):
+    '''Заносит порльзователя в БД и возвращает True в случае успеха, если такой ID уже есть в базе, возвращает False'''
     try:
         engine = sq.create_engine(config.db)
         Session = sessionmaker(bind=engine)
@@ -35,21 +36,23 @@ def record_user(id):
 
 
 def show_favorite():
+    '''Функция возвращает список ID пользователей, которые добавлены в список "Избранные"'''
     engine = sq.create_engine(config.db)
     Session = sessionmaker(bind=engine)
     session = Session()
+    users_list = []
     for user in session.query(User).filter(User.is_favorite == True).all():
-        print(user)
+        users_list.append(user.user_id)
     session.commit()
     session.close()
+    return users_list
 
 
 def set_favorite(id_user):
+    '''Уствнавливает значение True в столбце "is_vavorite" у пользователя с заданным ID'''
     engine = sq.create_engine(config.db)
     Session = sessionmaker(bind=engine)
     session = Session()
     session.query(User).filter(User.user_id == id_user).update({'is_favorite': True})
     session.commit()
     session.close()
-
-
