@@ -48,11 +48,18 @@ for event in longpoll.listen():
                     continue
                 else:
                     search_params_all_user[event.user_id] = vk_user.get_default_param(event.user_id)
-                write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
-                write_msg(event.user_id,'Поиск будет осуществлен на основании данных вашей анкеты. Изменить параметры поиска можно отпавив команду "Параметры"')
-                keyboard = VkKeyboard(inline=True)
-                keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
-                write_msg(event.user_id, 'Начнем искать пару?', keyboard)
+
+                if search_params_all_user[event.user_id][0] == 0:
+                    keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
+                    keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, 'Кажется у вас не указан пол, для корректного поиска рекоммендуется изменить параметры.', keyboard)
+                else:
+                    write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
+                    write_msg(event.user_id,'Поиск будет осуществлен на основании данных вашей анкеты. Изменить параметры поиска можно отпавив команду "Параметры"')
+                    keyboard = VkKeyboard(inline=True)
+                    keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, 'Начнем искать пару?', keyboard)
 
             elif request == 'искать' or request == 'дальше':
                 try:
