@@ -7,6 +7,7 @@ import pprint
 from random import randrange
 import time
 import data_base
+from datetime import date
 
 
 class VkAgent:
@@ -15,7 +16,9 @@ class VkAgent:
 
 
     def get_response(self, url, params):
-        return requests.get(url, params=params).json()
+        response = requests.get(url, params=params)
+        response_code = response.status_code
+        return response.json()
 
 
     def get_link(self, response, i):
@@ -131,3 +134,32 @@ class VkAgent:
         }
         response = self.get_response(url, params)
         return response['response'][0]['first_name']
+
+
+    def get_default_param(self, user_id):
+        '''Возвращает информацию о пользователе, необходимую для автоматического поиска пар'''
+
+        url = 'https://api.vk.com/method/users.get'
+        params = {
+            'access_token': self.token,
+            'v': '5.131',
+            'user_ids': user_id,
+            'fields': 'sex, city, bdate, age'
+        }
+        response = self.get_response(url, params)
+
+        search_params = []
+        if response['response'][0]['sex'] == 1:
+            search_params.append(2)
+        elif response['response'][0]['sex'] == 2:
+            search_params.append(1)
+        else:
+            search_params.append(response['response'][0]['sex'])
+        search_params.append(1)
+
+        user_bd_year = response['response'][0]['bdate'].split('.')
+        age = date.today().year - int(user_bd_year[2])
+        search_params.append(age)
+        search_params.append(response['response'][0]['city']['title'])
+        return search_params
+
