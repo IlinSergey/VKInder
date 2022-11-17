@@ -54,27 +54,33 @@ for event in longpoll.listen():
                     keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, 'Кажется у вас не указан пол, для корректного поиска рекоммендуется изменить параметры.', keyboard)
-                else:
-                    write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
-                    write_msg(event.user_id,'Поиск будет осуществлен на основании данных вашей анкеты. Изменить параметры поиска можно отпавив команду "Параметры"')
+                if search_params_all_user[event.user_id][2] == 0:
                     keyboard = VkKeyboard(inline=True)
-                    keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id, 'Начнем искать пару?', keyboard)
+                    keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id, 'Мы не смогли определить ваш возраст, для корректного поиска неоходимо изменить параметры.', keyboard)
+                else:
+                    if vk_user.get_name(event.user_id):
+                        write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
+                        write_msg(event.user_id,'Поиск будет осуществлен на основании данных вашей анкеты. Изменить параметры поиска можно отпавив команду "Параметры"')
+                        keyboard = VkKeyboard(inline=True)
+                        keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
+                        write_msg(event.user_id, 'Начнем искать пару?', keyboard)
+                    else:
+                        write_msg(event.user_id, 'Ой, кажется возникла проблема на стороне VK. Специалисты уже работают над ее устранением.')
 
             elif request == 'искать' or request == 'дальше':
                 try:
-                    id_user = vk_user.get_photo(search_params_all_user[event.user_id])
+                    id_user = vk_user.get_photo(search_params_all_user[event.user_id], event.user_id)
                     current_found_id = id_user
                     write_msg_with_photo(event.user_id)
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('В избранное', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, f'{vk_user.get_name(id_user)}  - vk.com/id{id_user}', keyboard)
-
                 except:
                     keyboard = VkKeyboard(inline=True)
-                    keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id, 'Ой-ёй, кажется не установлены параметры для поиска. Нужно это исправить!', keyboard)
+                    keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
+                    write_msg(event.user_id,'Ой, кажется возникла проблема. Специалисты уже работают над ее устранением.\nА пока, попробуем еще раз.', keyboard)
 
             elif request == 'в избранное':
                 set_favorite(current_found_id, event.user_id)

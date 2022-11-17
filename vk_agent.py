@@ -17,8 +17,10 @@ class VkAgent:
 
     def get_response(self, url, params):
         response = requests.get(url, params=params)
-        response_code = response.status_code
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return False
 
 
     def get_link(self, response, i):
@@ -27,14 +29,12 @@ class VkAgent:
 
         return response['response']['items'][i]['sizes'][-1]['url']
 
-    def find_users(self, search_params):
+    def find_users(self, search_params, customer_id):
 
         """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает
                рандомный id пользователя"""
 
         search_params = search_params
-        if len(search_params) < 4:   # На случай, если не придут параметры, будут использованы параметры по умолчанию
-            search_params = [1, 1, 25, 'Санкт-Петербург']
 
         url = 'https://api.vk.com/method/users.search'
         params = {
@@ -51,33 +51,37 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
-        list_users = []
+        if response:
+            list_users = []
 
-        for item in response['response']['items']:
-            if not item['is_closed']:
-                list_users.append(item['id'])
-            else:
-                continue
+            for item in response['response']['items']:
+                if not item['is_closed']:
+                    list_users.append(item['id'])
+                else:
+                    continue
 
-        def select_id_v2(list_users):
-            user_id = random.choice(list_users)
-            if data_base.record_user(user_id):
-                return user_id
-            else:
-                return select_id_v2(list_users)
-
-
-        return select_id_v2(list_users)
+            def select_id_v2(list_users):
+                user_id = random.choice(list_users)
+                list_users.remove(user_id)
+                if data_base.record_user(user_id, customer_id):
+                    return user_id
+                else:
+                    return select_id_v2(list_users)
 
 
-    def get_photo(self, search_params):
+            return select_id_v2(list_users)
+        else:
+            return False
+
+
+    def get_photo(self, search_params, customer_id):
 
         """Функция запрашиваает id пользователя, и если он удовлетворяет условиям,
          скачивает три самых популярных (на основании лайков и комментариев) фото профиля """
 
         url = 'https://api.vk.com/method/photos.get'
 
-        user_id = self.find_users(search_params)
+        user_id = self.find_users(search_params, customer_id)
 
         params = {
             'owner_id': user_id,
@@ -90,37 +94,40 @@ class VkAgent:
         }
 
         response = self.get_response(url, params)
-        time.sleep(0.3)
+        if response:
+            time.sleep(0.3)
 
-        """так-как не у всех профилей есть 3 фото и они не проходят проверку, отправляется повторный запрос,
-        возможны ситуации, когда бедет много запросов подряд, исмользую sleep дабы не попасть под ограничение
-         от VK в не более 3х запросов в секунду"""
+            """так-как не у всех профилей есть 3 фото и они не проходят проверку, отправляется повторный запрос,
+            возможны ситуации, когда бедет много запросов подряд, исмользую sleep дабы не попасть под ограничение
+             от VK в не более 3х запросов в секунду"""
 
-        count_photo = len(response['response']['items'])
-        if count_photo >= 3:
-            photo_dict = {}
-            for i in range(count_photo):
-                link = self.get_link(response, i)
-                likes_count = response['response']['items'][i]['likes']['count']
-                comments_count = response['response']['items'][i]['comments']['count']
-                photo_dict[likes_count + comments_count] = link
-            sorted_dict = sorted(photo_dict.items(), reverse=True)
+            count_photo = len(response['response']['items'])
+            if count_photo >= 3:
+                photo_dict = {}
+                for i in range(count_photo):
+                    link = self.get_link(response, i)
+                    likes_count = response['response']['items'][i]['likes']['count']
+                    comments_count = response['response']['items'][i]['comments']['count']
+                    photo_dict[likes_count + comments_count] = link
+                sorted_dict = sorted(photo_dict.items(), reverse=True)
 
-            list_of_link = []
+                list_of_link = []
 
-            for k in range(3):
-                list_of_link.append(sorted_dict[k][1])
+                for k in range(3):
+                    list_of_link.append(sorted_dict[k][1])
 
-            count_for_name_photo = 1
-            for link in list_of_link:
-                f = open(rf'photo\{count_for_name_photo}.jpg', 'wb')
-                ufr = requests.get(link)
-                f.write(ufr.content)
-                f.close()
-                count_for_name_photo += 1
-            return user_id
+                count_for_name_photo = 1
+                for link in list_of_link:
+                    f = open(rf'photo\{count_for_name_photo}.jpg', 'wb')
+                    ufr = requests.get(link)
+                    f.write(ufr.content)
+                    f.close()
+                    count_for_name_photo += 1
+                return user_id
+            else:
+                return self.get_photo(search_params, customer_id)
         else:
-            return self.get_photo(search_params)
+            return False
 
 
     def get_name(self, user_id):
@@ -133,7 +140,10 @@ class VkAgent:
             'user_ids': user_id
         }
         response = self.get_response(url, params)
-        return response['response'][0]['first_name']
+        if response:
+            return response['response'][0]['first_name']
+        else:
+            return False
 
 
     def get_default_param(self, user_id):
@@ -147,19 +157,23 @@ class VkAgent:
             'fields': 'sex, city, bdate, age'
         }
         response = self.get_response(url, params)
-
-        search_params = []
-        if response['response'][0]['sex'] == 1:
-            search_params.append(2)
-        elif response['response'][0]['sex'] == 2:
-            search_params.append(1)
+        if response:
+            search_params = []
+            if response['response'][0]['sex'] == 1:
+                search_params.append(2)
+            elif response['response'][0]['sex'] == 2:
+                search_params.append(1)
+            else:
+                search_params.append(response['response'][0]['sex'])
+            search_params.append(1) # по умолчанию 'в активном поиске'
+            user_bd_year = date.today().strftime("%d/%m/%Y").split('/') #значение по умолчанию, если возраст скрыт
+            try:
+                user_bd_year = response['response'][0]['bdate'].split('.')
+            except:
+                user_bd_year = user_bd_year
+            age = date.today().year - int(user_bd_year[2])
+            search_params.append(age)
+            search_params.append(response['response'][0]['city']['title'])
+            return search_params
         else:
-            search_params.append(response['response'][0]['sex'])
-        search_params.append(1)
-
-        user_bd_year = response['response'][0]['bdate'].split('.')
-        age = date.today().year - int(user_bd_year[2])
-        search_params.append(age)
-        search_params.append(response['response'][0]['city']['title'])
-        return search_params
-
+            return False

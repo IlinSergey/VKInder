@@ -8,10 +8,10 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'user'
 
-    id = sq.Column(sq.Integer, primary_key=True)
-    user_id = sq.Column(sq.Integer, unique=True)
+    id = sq.Column(sq.Integer)
+    user_id = sq.Column(sq.Integer, primary_key=True)
     is_favorite = sq.Column(sq.BOOLEAN)
-    customer_id = sq.Column(sq.Integer)
+    customer_id = sq.Column(sq.Integer, primary_key=True)
     ban = sq.Column(sq.BOOLEAN)
 
     def __str__(self):
@@ -21,14 +21,14 @@ def create_table(engine):
    Base.metadata.create_all(engine)
 
 
-def record_user(id):
+def record_user(id, customer_id):
     '''Заносит порльзователя в БД и возвращает True в случае успеха, если такой ID уже есть в базе, возвращает False'''
     try:
         engine = sq.create_engine(config.db)
         Session = sessionmaker(bind=engine)
         session = Session()
         create_table(engine)
-        user = User(user_id=id)
+        user = User(user_id=id, customer_id=customer_id)
         session.add(user)
         session.commit()
         session.close()
