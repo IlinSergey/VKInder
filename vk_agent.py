@@ -1,19 +1,19 @@
 import random
-import requests
-import config
+from random import randrange
+from datetime import date
+import time
 import json
 import os
-import pprint
-from random import randrange
-import time
+
+import requests
+
+import config
 import data_base
-from datetime import date
 
 
 class VkAgent:
     def __init__(self, token: str):
         self.token = token
-
 
     def get_response(self, url, params):
         response = requests.get(url, params=params)
@@ -22,20 +22,13 @@ class VkAgent:
         else:
             return False
 
-
     def get_link(self, response, i):
-
         """Функция запрашивает у VK ссылку на скачивание фото"""
-
         return response['response']['items'][i]['sizes'][-1]['url']
 
     def find_users(self, search_params, customer_id):
-
-        """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает
-               рандомный id пользователя"""
-
+        """Функция выполняет поиск пользователей в VK по заданным параметрам и возвращает рандомный id пользователя"""
         search_params = search_params
-
         url = 'https://api.vk.com/method/users.search'
         params = {
             'access_token': self.token,
@@ -49,11 +42,9 @@ class VkAgent:
             'has_photo': 1,
             'hometown': search_params[3]
         }
-
         response = self.get_response(url, params)
         if response:
             list_users = []
-
             for item in response['response']['items']:
                 if not item['is_closed']:
                     list_users.append(item['id'])
@@ -67,22 +58,17 @@ class VkAgent:
                     return user_id
                 else:
                     return select_id_v2(list_users)
-
-
             return select_id_v2(list_users)
         else:
             return False
 
-
     def get_photo(self, search_params, customer_id):
-
         """Функция запрашиваает id пользователя, и если он удовлетворяет условиям,
-         скачивает три самых популярных (на основании лайков и комментариев) фото профиля """
+         скачивает три самых популярных (на основании лайков и комментариев) фото профиля
 
+         """
         url = 'https://api.vk.com/method/photos.get'
-
         user_id = self.find_users(search_params, customer_id)
-
         params = {
             'owner_id': user_id,
             'album_id': 'profile',
@@ -92,15 +78,8 @@ class VkAgent:
             'access_token': self.token,
             'v': '5.131'
         }
-
         response = self.get_response(url, params)
         if response:
-            time.sleep(0.3)
-
-            """так-как не у всех профилей есть 3 фото и они не проходят проверку, отправляется повторный запрос,
-            возможны ситуации, когда бедет много запросов подряд, исмользую sleep дабы не попасть под ограничение
-             от VK в не более 3х запросов в секунду"""
-
             count_photo = len(response['response']['items'])
             if count_photo >= 3:
                 photo_dict = {}
@@ -110,12 +89,9 @@ class VkAgent:
                     comments_count = response['response']['items'][i]['comments']['count']
                     photo_dict[likes_count + comments_count] = link
                 sorted_dict = sorted(photo_dict.items(), reverse=True)
-
                 list_of_link = []
-
                 for k in range(3):
                     list_of_link.append(sorted_dict[k][1])
-
                 count_for_name_photo = 1
                 for link in list_of_link:
                     f = open(rf'photo\{count_for_name_photo}.jpg', 'wb')
@@ -129,10 +105,8 @@ class VkAgent:
         else:
             return False
 
-
     def get_name(self, user_id):
-        '''Возвращает имя пользователя VK на основании его ID'''
-
+        """Возвращает имя пользователя VK на основании его ID"""
         url = 'https://api.vk.com/method/users.get'
         params = {
             'access_token': self.token,
@@ -145,10 +119,8 @@ class VkAgent:
         else:
             return False
 
-
     def get_default_param(self, user_id):
-        '''Возвращает информацию о пользователе, необходимую для автоматического поиска пар'''
-
+        """Возвращает информацию о пользователе, необходимую для автоматического поиска пар"""
         url = 'https://api.vk.com/method/users.get'
         params = {
             'access_token': self.token,
@@ -165,11 +137,11 @@ class VkAgent:
                 search_params.append(1)
             else:
                 search_params.append(response['response'][0]['sex'])
-            search_params.append(1) # по умолчанию 'в активном поиске'
-            user_bd_year = date.today().strftime("%d/%m/%Y").split('/') #значение по умолчанию, если возраст скрыт
+            search_params.append(1)  # по умолчанию 'в активном поиске'
+            user_bd_year = date.today().strftime("%d/%m/%Y").split('/')  # значение по умолчанию, если возраст скрыт
             try:
                 user_bd_year = response['response'][0]['bdate'].split('.')
-            except:
+            except Exception:
                 user_bd_year = user_bd_year
             age = date.today().year - int(user_bd_year[2])
             search_params.append(age)

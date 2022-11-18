@@ -1,13 +1,13 @@
-from vk_agent import VkAgent
 import config
 import os
 from random import randrange
-from data_base import set_favorite, show_favorite
 
 import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 
+from vk_agent import VkAgent
+from data_base import set_favorite, show_favorite
 
 
 token = config.vk_group_token
@@ -18,7 +18,6 @@ longpoll = VkLongPoll(vk)
 vk_upload = vk_api.VkUpload(vk)
 
 vk_user = VkAgent(config.vk_user_token)
-
 
 
 def write_msg(user_id, message, keyboard=None):
@@ -33,7 +32,8 @@ def write_msg(user_id, message, keyboard=None):
 def write_msg_with_photo(user_id):
     resp = vk_upload.photo_messages(photos=['photo/1.jpg', 'photo/2.jpg', 'photo/3.jpg'])
     for ph in resp:
-        vk.method('messages.send', {'user_id': user_id, 'attachment': f"photo{ph['owner_id']}_{ph['id']}", 'random_id': randrange(10 ** 7)})
+        vk.method('messages.send', {'user_id': user_id, 'attachment': f"photo{ph['owner_id']}_{ph['id']}",
+                                    'random_id': randrange(10 ** 7)})
 
 
 search_params_all_user = {}
@@ -53,20 +53,24 @@ for event in longpoll.listen():
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id, 'Кажется у вас не указан пол, для корректного поиска рекоммендуется изменить параметры.', keyboard)
+                    write_msg(event.user_id, 'Кажется у вас не указан пол, '
+                                             'для корректного поиска рекоммендуется изменить параметры.', keyboard)
                 if search_params_all_user[event.user_id][2] == 0:
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('Параметры', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id, 'Мы не смогли определить ваш возраст, для корректного поиска неоходимо изменить параметры.', keyboard)
+                    write_msg(event.user_id, 'Мы не смогли определить ваш возраст,'
+                                             ' для корректного поиска неоходимо изменить параметры.', keyboard)
                 else:
                     if vk_user.get_name(event.user_id):
                         write_msg(event.user_id, f'Привет, {vk_user.get_name(event.user_id)}')
-                        write_msg(event.user_id,'Поиск будет осуществлен на основании данных вашей анкеты. Изменить параметры поиска можно отпавив команду "Параметры"')
+                        write_msg(event.user_id, 'Поиск будет осуществлен на основании данных вашей анкеты.'
+                                                 ' Изменить параметры поиска можно отпавив команду "Параметры"')
                         keyboard = VkKeyboard(inline=True)
                         keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
                         write_msg(event.user_id, 'Начнем искать пару?', keyboard)
                     else:
-                        write_msg(event.user_id, 'Ой, кажется возникла проблема на стороне VK. Специалисты уже работают над ее устранением.')
+                        write_msg(event.user_id, 'Ой, кажется возникла проблема на стороне VK.'
+                                                 ' Специалисты уже работают над ее устранением.')
 
             elif request == 'искать' or request == 'дальше':
                 try:
@@ -77,10 +81,12 @@ for event in longpoll.listen():
                     keyboard.add_button('В избранное', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, f'{vk_user.get_name(id_user)}  - vk.com/id{id_user}', keyboard)
-                except:
+                except Exception:
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id,'Ой, кажется возникла проблема. Специалисты уже работают над ее устранением.\nА пока, попробуем еще раз.', keyboard)
+                    write_msg(event.user_id, 'Ой, кажется возникла проблема.'
+                                             ' Специалисты уже работают над ее устранением.'
+                                             '\nА пока, попробуем еще раз.', keyboard)
 
             elif request == 'в избранное':
                 set_favorite(current_found_id, event.user_id)
@@ -106,7 +112,6 @@ for event in longpoll.listen():
                                 keyboard.add_button('Женщину', color=VkKeyboardColor.NEGATIVE)
                                 keyboard.add_button('Мужчину', color=VkKeyboardColor.PRIMARY)
                                 write_msg(event.user_id, 'Кого ищем?', keyboard)
-
                                 for event in longpoll.listen():
                                     if event.type == VkEventType.MESSAGE_NEW:
                                         if event.to_me:
@@ -129,8 +134,8 @@ for event in longpoll.listen():
                                 keyboard.add_button('3', color=VkKeyboardColor.SECONDARY)
                                 keyboard.add_button('4', color=VkKeyboardColor.SECONDARY)
                                 write_msg(event.user_id, 'В каком статусе?')
-                                write_msg(event.user_id, 'Не женат (замужем) - 1\nВ активном поиске - 2\nЖенат (Замужем) - 3\nВсе сложно - 4', keyboard)
-
+                                write_msg(event.user_id, 'Не женат (замужем) - 1\nВ активном поиске - 2\n'
+                                                         'Женат (Замужем) - 3\nВсе сложно - 4', keyboard)
                                 for event in longpoll.listen():
                                     if event.type == VkEventType.MESSAGE_NEW:
                                         if event.to_me:
@@ -152,7 +157,6 @@ for event in longpoll.listen():
 
                             if request == '3':
                                 write_msg(event.user_id, 'С какого возраста ищем?')
-
                                 for event in longpoll.listen():
                                     if event.type == VkEventType.MESSAGE_NEW:
                                         if event.to_me:
@@ -167,7 +171,6 @@ for event in longpoll.listen():
 
                             if request == '4':
                                 write_msg(event.user_id, 'Где ищем (населенный пункт)?')
-
                                 for event in longpoll.listen():
                                     if event.type == VkEventType.MESSAGE_NEW:
                                         if event.to_me:
@@ -180,8 +183,6 @@ for event in longpoll.listen():
                                             break
                                 break
 
-
-
             elif request == 'избранное':
                 user_list = show_favorite(event.user_id)
                 if len(user_list) < 1:
@@ -190,10 +191,11 @@ for event in longpoll.listen():
                     write_msg(event.user_id, 'Список "Избранное" пуст!\nДавай поскорее найдем кого-нибудь', keyboard)
                 else:
                     for user in user_list:
-                        write_msg(event.user_id,f'{vk_user.get_name(user)}  - vk.com/id{user}')
+                        write_msg(event.user_id, f'{vk_user.get_name(user)}  - vk.com/id{user}')
             elif request == 'пока':
                 write_msg(event.user_id, 'Пока((')
             elif request == 'помощь' or request == 'help' or request == 'хелп':
-                write_msg(event.user_id, 'Комманды для бота:\n"Параметры" - установить параметры поиска.\n"Искать" - искать пару.\n"Избранное" - показать список избранных пользователей')
+                write_msg(event.user_id, 'Комманды для бота:\n"Параметры" - установить параметры поиска.\n"Искать" -'
+                                         ' искать пару.\n"Избранное" - показать список избранных пользователей')
             else:
                 write_msg(event.user_id, 'Не понял вашего ответа...')
