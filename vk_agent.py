@@ -51,24 +51,56 @@ class VkAgent:
                 else:
                     continue
 
-            def select_id_v2(list_users):
+            def select_id(list_users):
                 user_id = random.choice(list_users)
                 list_users.remove(user_id)
                 if data_base.record_user(user_id, customer_id):
                     return user_id
                 else:
-                    return select_id_v2(list_users)
-            return select_id_v2(list_users)
+                    return select_id(list_users)
+            return select_id(list_users)
         else:
             return False
 
     def get_photo(self, search_params, customer_id):
-        """Функция запрашиваает id пользователя, и если он удовлетворяет условиям,
+        """Функция запрашиваает у VK список пользователей, согласно параметрам поиска, и
+        выбирает из списка рандомный id пользователя, и если он удовлетворяет условиям,
          скачивает три самых популярных (на основании лайков и комментариев) фото профиля
 
          """
+        list_users = []
+        url_find_user = 'https://api.vk.com/method/users.search'
+        params_find_user = {
+            'access_token': self.token,
+            'v': '5.131',
+            'sort': 0,
+            'count': 1000,
+            'status': search_params[1],
+            'sex': search_params[0],
+            'age_from': search_params[2],
+            'is_closed': False,
+            'has_photo': 1,
+            'hometown': search_params[3]
+        }
+        if len(list_users) == 0:
+            response_find_user = self.get_response(url_find_user, params_find_user)
+            if response_find_user:
+                for item in response_find_user['response']['items']:
+                    if not item['is_closed']:
+                        list_users.append(item['id'])
+                    else:
+                        continue
+
+        def select_id(list_users):
+            user_id = random.choice(list_users)
+            list_users.remove(user_id)
+            if data_base.record_user(user_id, customer_id):
+                return user_id
+            else:
+                return select_id(list_users)
+
         url = 'https://api.vk.com/method/photos.get'
-        user_id = self.find_users(search_params, customer_id)
+        user_id = select_id(list_users)
         params = {
             'owner_id': user_id,
             'album_id': 'profile',
