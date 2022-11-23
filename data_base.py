@@ -24,7 +24,7 @@ def create_table(engine):
 
 
 def record_user(id, customer_id):
-    """Заносит порльзователя в БД и возвращает True в случае успеха, если такой ID уже есть в базе, возвращает False"""
+    """Заносит пользователя в БД и возвращает True в случае успеха. Если такой ID уже есть в базе, возвращает False"""
     try:
         engine = sq.create_engine(config.db)
         Session = sessionmaker(bind=engine)
