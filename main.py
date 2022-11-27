@@ -29,18 +29,16 @@ def write_msg(user_id, message, keyboard=None):
     vk.method('messages.send', param)
 
 
-def write_msg_with_photo(user_id):
-    photo_list = []
-    for file in os.listdir('photo'):
-        photo_list.append(f'photo/{file}')
-    resp = vk_upload.photo_messages(photos=photo_list)
-    for ph in resp:
-        vk.method('messages.send', {'user_id': user_id, 'attachment': f"photo{ph['owner_id']}_{ph['id']}",
+def write_msg_with_photo(user_id, list_of_ids, owner_id):
+    for i in list_of_ids:
+        vk.method('messages.send', {'user_id': user_id, 'attachment': f"photo{owner_id}_{i}",
                                     'random_id': randrange(10 ** 7)})
-    vk_user.clear_dir()
+
 
 search_params_all_user = {}
 current_found_id = None
+
+
 def main():
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW:
@@ -77,13 +75,13 @@ def main():
                                                      ' Специалисты уже работают над ее устранением.')
 
                 elif request == 'искать' or request == 'дальше':
-                    id_user = vk_user.get_photo(search_params_all_user[event.user_id], event.user_id)
-                    current_found_id = id_user
-                    write_msg_with_photo(event.user_id)
+                    photo_param = vk_user.get_photo(search_params_all_user[event.user_id], event.user_id)
+                    current_found_id = photo_param[0]
+                    write_msg_with_photo(event.user_id, photo_param[1], photo_param[2])
                     keyboard = VkKeyboard(inline=True)
                     keyboard.add_button('В избранное', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('Дальше', color=VkKeyboardColor.PRIMARY)
-                    write_msg(event.user_id, f'{vk_user.get_name(id_user)}  - vk.com/id{id_user}', keyboard)
+                    write_msg(event.user_id, f'{vk_user.get_name(photo_param[0])}  - vk.com/id{photo_param[0]}', keyboard)
 
                 elif request == 'в избранное':
                     set_favorite(current_found_id, event.user_id)

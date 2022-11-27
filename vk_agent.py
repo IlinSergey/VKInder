@@ -5,6 +5,7 @@ import time
 import json
 import os
 import shutil
+import pprint
 
 import requests
 
@@ -26,6 +27,7 @@ class VkAgent:
             return False
 
     def get_link(self, response, i):
+        pprint.pprint(response)
         """Функция запрашивает у VK ссылку на скачивание фото"""
         return response['response']['items'][i]['sizes'][-1]['url']
 
@@ -65,9 +67,10 @@ class VkAgent:
                 return self.select_id(list_users, customer_id)
         else:
             return False
+
     def get_photo(self, search_params, customer_id):
-        """Функция скачивает 3 самых популярных фото пользователя, если фото меньше,
-        то скачивает имеющееся количество
+        """Функция получает id 3х самых популярных фото пользователя, если фото меньше,
+        то получает имеющееся количество
 
          """
 
@@ -89,38 +92,23 @@ class VkAgent:
             response = self.get_response(url, params)
             if response:
                 count_photo = len(response['response']['items'])
+                owner_id = response['response']['items'][0]['owner_id']
                 if count_photo >= 3:
                     photo_dict = {}
                     for i in range(count_photo):
-                        link = self.get_link(response, i)
                         likes_count = response['response']['items'][i]['likes']['count']
                         comments_count = response['response']['items'][i]['comments']['count']
-                        photo_dict[likes_count + comments_count] = link
+                        photo_dict[likes_count + comments_count] = response['response']['items'][i]['id']
                     sorted_dict = sorted(photo_dict.items(), reverse=True)
-                    list_of_link = []
+                    list_of_ids = []
                     for k in range(3):
-                        list_of_link.append(sorted_dict[k][1])
-                    count_for_name_photo = 1
-                    for link in list_of_link:
-                        f = open(rf'photo\{count_for_name_photo}.jpg', 'wb')
-                        ufr = requests.get(link)
-                        f.write(ufr.content)
-                        f.close()
-                        count_for_name_photo += 1
-                    return user_id
+                        list_of_ids.append(sorted_dict[k][1])
+                    return [user_id, list_of_ids, owner_id]
                 else:
-                    list_of_link = []
+                    list_of_ids = []
                     for i in range(count_photo):
-                        link = self.get_link(response, i)
-                        list_of_link.append(link)
-                    count_for_name_photo = 1
-                    for link in list_of_link:
-                        f = open(rf'photo\{count_for_name_photo}.jpg', 'wb')
-                        ufr = requests.get(link)
-                        f.write(ufr.content)
-                        f.close()
-                        count_for_name_photo += 1
-                    return user_id
+                        list_of_ids.append(response['response']['items'][i]['id'])
+                    return [user_id, list_of_ids, owner_id]
             else:
                 return False
         else:
@@ -179,3 +167,7 @@ class VkAgent:
     def clear_search_params(self):
         self.search_params = []
         self.list_users = []
+
+vk = VkAgent(config.vk_user_token)
+search_param = [1, 2, 25, 'Выборг']
+vk.get_photo(search_param, 11606581)
