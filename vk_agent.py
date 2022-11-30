@@ -3,9 +3,6 @@ from random import randrange
 from datetime import date
 import time
 import json
-import os
-import shutil
-import pprint
 
 import requests
 
@@ -18,6 +15,8 @@ class VkAgent:
         self.token = token
         self.list_users = []
         self.search_params = []
+        self.offset_count = 0
+        self.search_count = 50
 
     def get_response(self, url, params):
         response = requests.get(url, params=params)
@@ -39,7 +38,8 @@ class VkAgent:
             'access_token': self.token,
             'v': '5.131',
             'sort': 0,
-            'count': 100,
+            'count': self.search_count,
+            'offset': self.offset_count,
             'status': search_params[1],
             'sex': search_params[0],
             'age_from': search_params[2],
@@ -76,6 +76,7 @@ class VkAgent:
 
         if len(self.list_users) == 0:
             self.make_user_list(search_params)
+            self.offset_count += self.search_count
 
         url = 'https://api.vk.com/method/photos.get'
         user_id = self.select_id(self.list_users, customer_id)
@@ -160,14 +161,7 @@ class VkAgent:
         else:
             return False
 
-    def clear_dir(self):
-        for file in os.listdir('photo'):
-            os.remove(f'photo/{file}')
-
     def clear_search_params(self):
         self.search_params = []
         self.list_users = []
 
-vk = VkAgent(config.vk_user_token)
-search_param = [1, 2, 25, 'Выборг']
-vk.get_photo(search_param, 11606581)

@@ -1,5 +1,4 @@
 import config
-import os
 from random import randrange
 
 import vk_api
