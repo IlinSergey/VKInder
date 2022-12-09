@@ -6,7 +6,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 from vk_agent import VkAgent
-from data_base_v2 import set_favorite, show_favorite
+from data_base_v2 import set_favorite, show_favorite, create_table
 
 
 token = config.vk_group_token
@@ -39,6 +39,7 @@ current_found_id = None
 
 
 def main():
+    create_table()
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW:
             if event.to_me:
