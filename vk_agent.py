@@ -1,13 +1,10 @@
 import random
 from random import randrange
 from datetime import date
-import time
-import json
 
 import requests
 
-import config
-import data_base
+import data_base_v2
 
 
 class VkAgent:
@@ -25,8 +22,7 @@ class VkAgent:
         else:
             return False
 
-    def get_link(self, response, i):
-        pprint.pprint(response)
+    def get_link(self, response, i):        
         """Функция запрашивает у VK ссылку на скачивание фото"""
         return response['response']['items'][i]['sizes'][-1]['url']
 
@@ -61,7 +57,7 @@ class VkAgent:
         if len(self.list_users) != 0:
             user_id = random.choice(list_users)
             list_users.remove(user_id)
-            if data_base.record_user(user_id, customer_id):
+            if data_base_v2.record_user(user_id, customer_id):
                 return user_id
             else:
                 return self.select_id(list_users, customer_id)
