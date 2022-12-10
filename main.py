@@ -96,7 +96,7 @@ def main():
                     keyboard.add_button('3', color=VkKeyboardColor.PRIMARY)
                     keyboard.add_button('4', color=VkKeyboardColor.PRIMARY)
                     write_msg(event.user_id, 'Какой параметр меняем?\n1 - Пол\n2 - Статус\n3 - Возраст\n4 - Город', keyboard)
-                    vk_user.clear_search_params()
+                    vk_user.clear_search_params(event.user_id)
 
                     for event in longpoll.listen():
                         if event.type == VkEventType.MESSAGE_NEW:

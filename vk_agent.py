@@ -1,6 +1,7 @@
 import random
 from random import randrange
 from datetime import date
+from pprint import pprint
 
 import requests
 
@@ -10,10 +11,10 @@ import data_base_v2
 class VkAgent:
     def __init__(self, token: str):
         self.token = token
-        self.list_users = []
-        self.search_params = []
-        self.offset_count = 0
-        self.search_count = 50
+        self.list_users = {}
+        self.search_params = {}
+        self.offset_count = {}
+        self.search_count = 10
 
     def get_response(self, url, params):
         response = requests.get(url, params=params)
@@ -26,7 +27,7 @@ class VkAgent:
         """Функция запрашивает у VK ссылку на скачивание фото"""
         return response['response']['items'][i]['sizes'][-1]['url']
 
-    def make_user_list(self, search_params):
+    def make_user_list(self, search_params, customer_id):
         """Создает список id пользователей исходя из параметров поиска"""
         list_users = []
         url_find_user = 'https://api.vk.com/method/users.search'
@@ -35,7 +36,7 @@ class VkAgent:
             'v': '5.131',
             'sort': 0,
             'count': self.search_count,
-            'offset': self.offset_count,
+            'offset': self.offset_count[customer_id],
             'status': search_params[1],
             'sex': search_params[0],
             'age_from': search_params[2],
@@ -50,18 +51,21 @@ class VkAgent:
                     list_users.append(item['id'])
                 else:
                     continue
-            self.list_users = list_users
+            self.list_users[customer_id] = list_users
 
     def select_id(self, list_users, customer_id):
         """Возвращает рандомный id из списка"""
-        if len(self.list_users) != 0:
-            user_id = random.choice(list_users)
-            list_users.remove(user_id)
-            if data_base_v2.record_user(user_id, customer_id):
-                return user_id
+        try:
+            if len(list_users) != 0:
+                user_id = random.choice(list_users)
+                list_users.remove(user_id)
+                if data_base_v2.record_user(user_id, customer_id):
+                    return user_id
+                else:
+                    return self.select_id(list_users, customer_id)
             else:
-                return self.select_id(list_users, customer_id)
-        else:
+                return False
+        except:
             return False
 
     def get_photo(self, search_params, customer_id):
@@ -69,13 +73,20 @@ class VkAgent:
         то получает имеющееся количество
 
          """
+        if customer_id not in self.search_params:
+            self.search_params[customer_id] = search_params
+        if customer_id not in self.offset_count:
+            self.offset_count[customer_id] = 0
+        if customer_id in self.list_users:
+            if len(self.list_users[customer_id]) == 0:
+                self.make_user_list(self.search_params[customer_id], customer_id)
+                self.offset_count[customer_id] += self.search_count
+        else:
+            self.list_users[customer_id] = []
 
-        if len(self.list_users) == 0:
-            self.make_user_list(search_params)
-            self.offset_count += self.search_count
 
         url = 'https://api.vk.com/method/photos.get'
-        user_id = self.select_id(self.list_users, customer_id)
+        user_id = self.select_id(self.list_users[customer_id], customer_id)
         if user_id:
             params = {
                 'owner_id': user_id,
@@ -109,8 +120,8 @@ class VkAgent:
             else:
                 return False
         else:
-            self.make_user_list(search_params)
-            return self.get_photo(search_params, customer_id)
+            self.make_user_list(self.search_params[customer_id], customer_id)
+            return self.get_photo(self.search_params[customer_id], customer_id)
 
     def get_name(self, user_id):
         """Возвращает имя пользователя VK на основании его ID"""
@@ -157,7 +168,7 @@ class VkAgent:
         else:
             return False
 
-    def clear_search_params(self):
-        self.search_params = []
-        self.list_users = []
+    def clear_search_params(self, customer_id):
+        #self.search_params = []
+        self.list_users[customer_id] = []
 
