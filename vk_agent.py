@@ -14,7 +14,7 @@ class VkAgent:
         self.list_users = {}
         self.search_params = {}
         self.offset_count = {}
-        self.search_count = 10
+        self.search_count = 100
 
     def get_response(self, url, params):
         response = requests.get(url, params=params)
